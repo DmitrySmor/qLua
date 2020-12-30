@@ -26,7 +26,7 @@ Is_Run      		= true; 							-- Флаг запуска скрипта посл�
 
 -- Здесь будет Ваш код пред инициализации функции main()
 function OnInit() 
-	message("________ OnInit ________");	
+	-- message("________ OnInit ________");		
 end;
 
 -- Функция отсановки скрипта
@@ -47,7 +47,7 @@ end;
 function OnStopOrder(trans_reply)
 	-- Закрываем все лимитные сделки по истументу если сработала стоп заявка
 	if (trans_reply.balance == 0) then
-		message("Удаляем все лимитные ордера: "..trans_reply.sec_code  , 2);
+		message("Delete All limit orders: "..trans_reply.sec_code  , 2);
 		kill_all_futures_orders(trans_reply.sec_code);
 	end;
 end;
