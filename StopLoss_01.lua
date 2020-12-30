@@ -20,12 +20,13 @@ STOP_TABLE 			= {									-- Массив БАЗОВЫХ АТИВАХ Стопо
 					  }; 								
 Is_Run      		= true; 							-- Флаг запуска скрипта после нажатия на копку запуска
 
--- Здесь будет Ваш код пред инициализации функции main()
+-- Функция инициализации функции main()
 function OnInit() 
-	-- message("________ OnInit ________");		
+	-- message("________ OnInit ________");	
+	-- Ваш код перед инициализации функции main() 
 end;
 
--- Функция отсановки скрипта
+-- Функция остановки скрипта
 function OnStop()
 	Is_Run = false;
 end;
@@ -123,7 +124,7 @@ function main_BODY()
 	
 	-- Проверяем сосотяние позицй 
 	for key, val in pairs(array_class_code) do		
-		-- Пзиция(есть) и Стоп(есть) и они не равны тогда удаляем стоп
+		-- Позиция(есть) и Стоп(есть) и они не равны тогда удаляем стоп
 		if (val.pos_sum ~= 0  and val.stop_sum ~= 0 and math.abs(val.pos_sum) ~= math.abs(val.stop_sum)) then
 			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum);
 			-- Удаляем стоп заявку
@@ -131,13 +132,13 @@ function main_BODY()
 			-- Ставим новую стоп заявку
    			new_stop_order (key, val);
 
-		-- Пзиция(есть) и Стоп(нет) добовляем стоп
+		-- Позиция(есть) и Стоп(нет) добовляем стоп
 		elseif (val.pos_sum ~= 0  and val.stop_sum == 0) then
 			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum);
 			-- Ставим новую стоп заявку
 			new_stop_order (key, val);
 
-		-- Пзиция(нет) и Стоп(есть) удаляем стоп
+		-- Позиция(нет) и Стоп(есть) удаляем стоп
 		elseif (val.pos_sum == 0  and val.stop_sum ~= 0) then
 			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum);
 			-- Удаляем стоп заявку
