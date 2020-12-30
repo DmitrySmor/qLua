@@ -1,10 +1,10 @@
 --[[
-	ПОСТАНОВКА И СНЯТИЕ STOP-ОРДЕРА (использую для фючерсов)
+	ПОСТАНОВКА И СНЯТИЕ STOP-ОРДЕРА (использую для торговли фючерсов внутри дня)
 	- ставит стоп ордера если их нет (размер можно настраивать на каждый инструмент отдельно в STOP_TABLE)
 	- изменяте колличестов стоп ордеров если выходишь частями (лимитками или маркетом)
 	- удаляет стоп ордера по интсрументу (друге не трогает) если вы вышли из позиции целиком (маркет, лимит)
 	- удаляет все лимитные ордра по интсрументу (друге не трогает) если позиция закрылась по Стопу
-	- в конце вечерней ссесии закрывает все активне сделки и стоп ордера (пока не реализованна) 
+	- в конце вечерней ссесии закрывает все активне сделки, стоп и лимитные ордра по 
 	gfh
 --]]
 
@@ -12,17 +12,14 @@
 CLASS_CODE        	= "SPBFUT"; 						-- Код класса (SPBFUT - фючерсы)
 ACCOUNT_ID 			= "SPBFUT001tt"; 					-- Торговыий счет (Демо)
 -- ACCOUNT_ID 			= "7655c4l"; 						-- Торговыий счет (Рабочий)
+TIME_CLOSE			= "23:30:00"						-- Время закрытия позици и связанные с ним заявками
 STOP_INDENT 		= 200; 								-- Отступ пунктах для Стоп-ордера (по умолчанию)
 STOP_TABLE 			= {									-- Массив БАЗОВЫХ АТИВАХ Стопов (по необходимости добавлять или удалять)
 						BR  = 20,						-- Отступ пунктах для Стоп-ордера BR 
 						RTS = 200,						-- Отступ пунктах для Стоп-ордера RTS 
 						Si  = 50,						-- Отступ пунктах для Стоп-ордера Si
 					  }; 								
-
-
--- РАБОЧИЕ ПЕРЕМЕННЫЕ РОБОТА (менять не нужно)
 Is_Run      		= true; 							-- Флаг запуска скрипта после нажатия на копку запуска
-
 
 -- Здесь будет Ваш код пред инициализации функции main()
 function OnInit() 
@@ -75,12 +72,11 @@ function main()
             main_BODY();
             else
             	message("CONNECTION STATE IS : " .. tostring(isConnected()), 3);
-     	end;	
+     	end;
 	end;
 end;
 
 function main_BODY()
-	
 	-- Локальный массив со всеми кода фючерсов, код будет как индекс
 	local array_class_code = {}; -- перезаписываемы массив, с которым мы работаем
 	for class_code in string.gmatch(getClassSecurities(CLASS_CODE), "(%w+)") do
@@ -112,10 +108,6 @@ function main_BODY()
  			array_class_code[position.seccode]['pos_sum'] 	= tonumber(position.totalnet);  -- Колличество в лотах (если со знаком "-" то это продажа)
  			array_class_code[position.seccode]['pos_price'] = position.avrposnprice; 		-- Эффективная цена позиций 
 
-			-- for key, val in pairs(position) do
-			-- 	message(tostring(key).." - "..tostring(val));
-			-- end;
-			-- message("-------------")	
 	   	end;
 	end;
 
@@ -135,8 +127,7 @@ function main_BODY()
 	end;
 	
 	-- Проверяем сосотяние позицй 
-	for key, val in pairs(array_class_code) do
-		
+	for key, val in pairs(array_class_code) do		
 		-- Пзиция(есть) и Стоп(есть) и они не равны тогда удаляем стоп
 		if (val.pos_sum ~= 0  and val.stop_sum ~= 0 and math.abs(val.pos_sum) ~= math.abs(val.stop_sum)) then
 			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum);
@@ -157,8 +148,14 @@ function main_BODY()
 			-- Удаляем стоп заявку
 			kill_stop_order(key, val);
 		end;
-	end;
 
+		-- Удаляем позицию по времени (В конце дня) еcли она есть
+		if(val.pos_sum ~= 0 and getInfoParam("LOCALTIME") >= TIME_CLOSE)  then
+			message("Close on time: "..seccode, 2);
+			new_order(key, val);
+			kill_all_futures_orders(key);
+		end;				
+	end;
 end;
 
 -- Выставляем стоп ордер по инстументу.
@@ -197,6 +194,34 @@ function new_stop_order (seccode, val)
 	if res ~= "" then message('Error: '..res, 3); end;
 end;
 
+-- Закрываем позицию по маркету
+function new_order (seccode, val)
+
+	local operation = "B"; 
+	local price = tostring(getParamEx(CLASS_CODE, seccode, "bid").param_value + 10*getParamEx(CLASS_CODE, seccode, "SEC_PRICE_STEP").param_value); 
+	-- Для позиции лонг
+	if val.pos_sum > 0 then 
+		operation = "S";
+		price = tostring(getParamEx(CLASS_CODE, seccode, "bid").param_value - 10*getParamEx(CLASS_CODE, seccode, "SEC_PRICE_STEP").param_value);
+	end;
+
+	local Transaction = {
+		['ACTION'] 					= "NEW_ORDER", 
+		['TYPE'] 					= "M",
+		['ACCOUNT'] 				= ACCOUNT_ID,
+		['CLASSCODE'] 				= CLASS_CODE,
+		['CLIENT_CODE'] 			= "Close on time", -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках 
+		['PRICE'] 					= removeZero(price), -- Используем цену по кторой входили в позицю
+		['TRANS_ID'] 				= removeZero(val.stop_trans_id),
+		['SECCODE'] 				= seccode,
+		['OPERATION'] 				= operation, -- Направление заявки, обязательный параметр. Значения: «S» – продать, «B» – купить
+		['QUANTITY']  				= tostring(math.abs(val.pos_sum)), -- Количество лотов в заявке, обязательный параметр 
+	};
+
+	local res = sendTransaction(Transaction);
+	if res ~= "" then message('Error: '..res, 3); end;
+end
+
 -- Удаляем Стоп ордер по инстументу
 function kill_stop_order (seccode,val)
 	local Transaction = {
@@ -214,7 +239,7 @@ function kill_stop_order (seccode,val)
 end;
 
 -- Удаляем все активные лимитные заявки по иструменту
-function kill_all_futures_orders(seccode)
+function kill_all_futures_orders (seccode)
 	local Transaction = {
        ['ACTION'] 					= "KILL_ALL_FUTURES_ORDERS", 
        ['CLASSCODE'] 				= CLASS_CODE,
@@ -227,3 +252,4 @@ function kill_all_futures_orders(seccode)
 	local res = sendTransaction(Transaction);
 	if res ~= "" then message('Error: '..res, 3); end;
 end;
+
