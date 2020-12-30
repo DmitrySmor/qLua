@@ -45,7 +45,7 @@ function OnStopOrder(trans_reply)
 	end;
 end;
 
--- Функция удаление точки и нулей после нее (Вспомогательная)
+-- Функция удаление точки и нулей после нее (Вспомогательная функция)
 function removeZero(str);
 	str = tostring(str);
 	while (string.sub(str,-1) == "0" and str ~= "0") do
@@ -61,8 +61,8 @@ end;
 function main() 
 	-- main_BODY();
 	while Is_Run do
-		sleep(1000); -- одна сикунда
-		-- Запускаем скрипт если есть соединенеи с сервером
+		sleep(1000); -- одна сикунда = 1000
+		-- Запускаем скрипт если есть соединение с сервером
 		if isConnected() then
 			-- тело скрипта
             main_BODY();
