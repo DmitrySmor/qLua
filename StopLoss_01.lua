@@ -11,7 +11,7 @@
 CLASS_CODE        	= "SPBFUT"; 						-- Код класса (SPBFUT - фючерсы)
 ACCOUNT_ID 			= "SPBFUT001tt"; 					-- Торговыий счет (Демо)
 -- ACCOUNT_ID 			= "7655c4l"; 						-- Торговыий счет (Рабочий)
-TIME_CLOSE			= "23:30:00"						-- Время закрытия позици и связанные с ним заявками
+TIME_CLOSE			= "23:29:00";						-- Время закрытия позици и связанные с ним заявками
 STOP_INDENT 		= 200; 								-- Отступ пунктах для Стоп-ордера (по умолчанию)
 STOP_TABLE 			= {									-- Массив БАЗОВЫХ АТИВАХ Стопов (по необходимости добавлять или удалять)
 						BR  = 20,						-- Отступ пунктах для Стоп-ордера BR 
@@ -147,9 +147,11 @@ function main_BODY()
 
 		-- Удаляем позицию по времени (В конце дня) еcли она есть
 		if(val.pos_sum ~= 0 and getInfoParam("LOCALTIME") >= TIME_CLOSE)  then
-			message("Close on time: "..seccode, 2);
-			new_order(key, val);
+			message("Close on time: "..key, 2);
+			-- Удаляем лиминтые ордера
 			kill_all_futures_orders(key);
+			-- Закрываем позицию по рынку
+			new_order(key, val);
 		end;				
 	end;
 end;
