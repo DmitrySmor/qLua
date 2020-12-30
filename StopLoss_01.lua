@@ -34,7 +34,7 @@ function OnStop()
 	Is_Run = false;
 end;
 
--- Функция обратного вызова (SearchItems) для поистка активных стоп ордеров для фьюечрсов.
+-- Функция обратного вызова (SearchItems) для поиска активных стоп ордеров для фьюечрсов.
 function SearchItems_stop_orders (flags, class_code)
 	if bit.band(flags,0x1)==0x1 and class_code == CLASS_CODE then 
     	return true
