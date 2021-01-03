@@ -8,22 +8,22 @@
 --]]
 
 -- НАСТРАИВАЕМЫЕ ПАРАМЕТРЫ
-CLASS_CODE        	= "SPBFUT"; 						-- Код класса (SPBFUT - фючерсы)
-ACCOUNT_ID 			= "SPBFUT001tt"; 					-- Торговыий счет (Демо)
--- ACCOUNT_ID 			= "7655c4l"; 						-- Торговыий счет (Рабочий)
-TIME_CLOSE			= "23:29:00";						-- Время закрытия позици и связанные с ним заявками
-STOP_INDENT 		= 200; 								-- Отступ пунктах для Стоп-ордера (по умолчанию)
-STOP_TABLE 			= {									-- Массив БАЗОВЫХ АТИВАХ Стопов (по необходимости добавлять или удалять)
-						BR  = 20,						-- Отступ пунктах для Стоп-ордера BR 
-						RTS = 200,						-- Отступ пунктах для Стоп-ордера RTS 
-						Si  = 50,						-- Отступ пунктах для Стоп-ордера Si
-					  }; 								
-Is_Run      		= true; 							-- Флаг запуска скрипта после нажатия на копку запуска
+CLASS_CODE      = "SPBFUT"; 						-- Код класса (SPBFUT - фючерсы)
+ACCOUNT_ID 			= "SPBFUT001tt"; 				-- Торговыий счет (Демо)
+ACCOUNT_ID 			= "7655c4l"; 						-- Торговыий счет (Рабочий)
+-- TIME_CLOSE			= "23:29:00";						-- Время закрытия позици и связанные с ним заявками
+STOP_INDENT 		= 200; 									-- Отступ пунктах для Стоп-ордера (по умолчанию)
+STOP_TABLE 			= {											-- Массив БАЗОВЫХ АТИВАХ Стопов (по необходимости добавлять или удалять)
+									BR  = 20,							-- Отступ пунктах для Стоп-ордера BR
+									RTS = 200,						-- Отступ пунктах для Стоп-ордера RTS
+									Si  = 50,							-- Отступ пунктах для Стоп-ордера Si
+					  		};
+Is_Run      		= true; 								-- Флаг запуска скрипта после нажатия на копку запуска
 
 -- Функция инициализации функции main()
-function OnInit() 
-	-- message("________ OnInit ________");	
-	-- Ваш код перед инициализации функции main() 
+function OnInit()
+	-- message("________ OnInit ________");
+	-- Ваш код перед инициализации функции main()
 end;
 
 -- Функция остановки скрипта
@@ -36,7 +36,7 @@ function SearchItems_stop_orders (flags, class_code)
 	if bit.band(flags,0x1)==0x1 and class_code == CLASS_CODE then return true else return false end;
 end;
 
--- Функция вызывается терминалом QUIK при получении новой стоп-заявки или при изменении параметров существующей стоп-заявки.. 
+-- Функция вызывается терминалом QUIK при получении новой стоп-заявки или при изменении параметров существующей стоп-заявки..
 function OnStopOrder(trans_reply)
 	-- Закрываем все лимитные сделки по истументу если сработала стоп заявка
 	if (trans_reply.balance == 0) then
@@ -51,14 +51,14 @@ function removeZero(str);
 	while (string.sub(str,-1) == "0" and str ~= "0") do
 		str = string.sub(str,1,-2)
 	end;
-	if (string.sub(str,-1) == ".") then 
+	if (string.sub(str,-1) == ".") then
 		str = string.sub(str,1,-2)
 	end;
    return str
 end;
 
 -- Функция основной логики скрипта, работает в отдельном потоке
-function main() 
+function main()
 	-- main_BODY();
 	while Is_Run do
 		sleep(1000); -- одна сикунда = 1000
@@ -77,24 +77,24 @@ function main_BODY()
 	local array_class_code = {}; -- перезаписываемы массив, с которым мы работаем
 	for class_code in string.gmatch(getClassSecurities(CLASS_CODE), "(%w+)") do
 
-		array_class_code[class_code] = { 
+		array_class_code[class_code] = {
 			pos_sum  		= 0, 			-- текущие открытые позиции в лотах
-			pos_price  		= 0, 			-- Эффективная цена позиций 
+			pos_price  		= 0, 			-- Эффективная цена позиций
 			stop_sum 		= 0, 			-- текущие активне стоп ордера в лотах
-			stop_trans_id 	= 1001, 		-- Уникальный идентификационный номер заявки, значение от «1» до «2 147 483 647» 
-			stop_order_id 	= 0, 			-- Уникальный идентификационный номер заявки, от сервера (в дальнейщейм он презапивыеться) 
+			stop_trans_id 	= 1001, 		-- Уникальный идентификационный номер заявки, значение от «1» до «2 147 483 647»
+			stop_order_id 	= 0, 			-- Уникальный идентификационный номер заявки, от сервера (в дальнейщейм он презапивыеться)
 			stop_price 		= nil, 			-- Стоп-лимит цена (необходима для запоминаня старой стоп заявки)
 			stop_indent 	= STOP_INDENT, 	-- Стоп в пунктах по умолчаняю
 		};
 
 		-- проверка на существоваиня стопа в STOP_TABLE, если есть то устанавливаем из STOP_TABLE
 		local base_active =  getSecurityInfo(CLASS_CODE, class_code).base_active_seccode;
-		if (STOP_TABLE[base_active]) then 
-			array_class_code[class_code]["stop_indent"] = STOP_TABLE[base_active]; 
+		if (STOP_TABLE[base_active]) then
+			array_class_code[class_code]["stop_indent"] = STOP_TABLE[base_active];
 		end;
 	end;
 
-	-- Собираем данные по позициям  из таблицы "futures_client_holding" 
+	-- Собираем данные по позициям  из таблицы "futures_client_holding"
 	if getNumberOf("futures_client_holding") then
 		for i = 0, getNumberOf("futures_client_holding")-1 do
 			-- получаем из таблицы строку с данными по индексу i
@@ -102,7 +102,7 @@ function main_BODY()
 
 			-- Записываем данные по открытой позиции
  			array_class_code[position.seccode]['pos_sum'] 	= tonumber(position.totalnet);  -- Колличество в лотах (если со знаком "-" то это продажа)
- 			array_class_code[position.seccode]['pos_price'] = position.avrposnprice; 		-- Эффективная цена позиций 
+ 			array_class_code[position.seccode]['pos_price'] = position.avrposnprice; 		-- Эффективная цена позиций
 
 	   	end;
 	end;
@@ -118,12 +118,12 @@ function main_BODY()
 			-- Колличество в лотах (если со знаком "-" то это продажа)
  			array_class_code[stopPos.sec_code]['stop_sum'] 			= tonumber(stopPos.qty); 	-- текущие активне стоп ордера в лотах
  			array_class_code[stopPos.sec_code]['stop_order_id'] 	= stopPos.order_num; 		-- Уникальный идентификационный номер заявки, от сервера (для последующего удаленя)
- 			array_class_code[stopPos.sec_code]['stop_price'] 		= stopPos.condition_price2; -- Стоп-лимит цена (для заявок типа «Тэйк-профит и стоп-лимит») 
+ 			array_class_code[stopPos.sec_code]['stop_price'] 		= stopPos.condition_price2; -- Стоп-лимит цена (для заявок типа «Тэйк-профит и стоп-лимит»)
 		end;
 	end;
-	
-	-- Проверяем сосотяние позицй 
-	for key, val in pairs(array_class_code) do		
+
+	-- Проверяем сосотяние позицй
+	for key, val in pairs(array_class_code) do
 		-- Позиция(есть) и Стоп(есть) и они не равны тогда удаляем стоп
 		if (val.pos_sum ~= 0  and val.stop_sum ~= 0 and math.abs(val.pos_sum) ~= math.abs(val.stop_sum)) then
 			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum);
@@ -152,7 +152,7 @@ function main_BODY()
 			kill_all_futures_orders(key);
 			-- Закрываем позицию по рынку
 			new_order(key, val);
-		end;				
+		end;
 	end;
 end;
 
@@ -161,14 +161,14 @@ function new_stop_order (seccode, val)
 
 	local operation, condition, offset, stopprice2 = "B", "5", tostring(0), val.pos_price + val.stop_indent;
 	-- Для позиции лонг
-	if val.pos_sum > 0 then 
-		operation, condition, offset, stopprice2 = "S", "4", tostring(0), val.pos_price - val.stop_indent;	
+	if val.pos_sum > 0 then
+		operation, condition, offset, stopprice2 = "S", "4", tostring(0), val.pos_price - val.stop_indent;
 	end;
 	-- Если есть старая стоп заявка, берем стоп-цену из старой заявки
 	if val.stop_price then stopprice2 = val.stop_price; end
 
 	local Transaction = {
-		['ACTION'] 					= "NEW_STOP_ORDER", 
+		['ACTION'] 					= "NEW_STOP_ORDER",
 		['EXPIRY_DATE'] 			= "TODAY",--"GTC", -- на учебном серве только стоп-заявки с истечением сегодня, потом поменять на GTC
 		['STOP_ORDER_KIND'] 		= "TAKE_PROFIT_AND_STOP_LIMIT_ORDER", -- Тип стоп-заявки
 		['MARKET_STOP_LIMIT'] 		= "YES",
@@ -176,7 +176,7 @@ function new_stop_order (seccode, val)
 		['TYPE'] 					= "M",
 		['ACCOUNT'] 				= ACCOUNT_ID,
 		['CLASSCODE'] 				= CLASS_CODE,
-		['CLIENT_CODE'] 			= ACCOUNT_ID, -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках 
+		['CLIENT_CODE'] 			= ACCOUNT_ID, -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках
 		['PRICE'] 					= "0", -- Цена, по которой выставится заявка при срабатывании Стоп-Лосса (для рыночной заявки по акциям должна быть 0)
 		['STOPPRICE'] 				= "0", -- Цена Тэйк-Профита
 		["STOPPRICE2"] 				= removeZero(stopprice2), -- Цена Стоп-Лосса
@@ -185,7 +185,7 @@ function new_stop_order (seccode, val)
 		['SECCODE'] 				= seccode,
 		['OPERATION'] 				= operation, -- Направление заявки, обязательный параметр. Значения: «S» – продать, «B» – купить
 		['CONDITION'] 				= condition, -- Направленность стоп-цены. Возможные значения: «4» - меньше или равно, «5» – больше или равно
-		['QUANTITY']  				= tostring(math.abs(val.pos_sum)), -- Количество лотов в заявке, обязательный параметр 
+		['QUANTITY']  				= tostring(math.abs(val.pos_sum)), -- Количество лотов в заявке, обязательный параметр
 	};
 
 	local res = sendTransaction(Transaction);
@@ -195,25 +195,25 @@ end;
 -- Закрываем позицию по маркету
 function new_order (seccode, val)
 
-	local operation = "B"; 
-	local price = tostring(getParamEx(CLASS_CODE, seccode, "bid").param_value + 10*getParamEx(CLASS_CODE, seccode, "SEC_PRICE_STEP").param_value); 
+	local operation = "B";
+	local price = tostring(getParamEx(CLASS_CODE, seccode, "bid").param_value + 10*getParamEx(CLASS_CODE, seccode, "SEC_PRICE_STEP").param_value);
 	-- Для позиции лонг
-	if val.pos_sum > 0 then 
+	if val.pos_sum > 0 then
 		operation = "S";
 		price = tostring(getParamEx(CLASS_CODE, seccode, "bid").param_value - 10*getParamEx(CLASS_CODE, seccode, "SEC_PRICE_STEP").param_value);
 	end;
 
 	local Transaction = {
-		['ACTION'] 					= "NEW_ORDER", 
+		['ACTION'] 					= "NEW_ORDER",
 		['TYPE'] 					= "M",
 		['ACCOUNT'] 				= ACCOUNT_ID,
 		['CLASSCODE'] 				= CLASS_CODE,
-		['CLIENT_CODE'] 			= "Close on time", -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках 
+		['CLIENT_CODE'] 			= "Close on time", -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках
 		['PRICE'] 					= removeZero(price), -- Используем цену по кторой входили в позицю
 		['TRANS_ID'] 				= removeZero(val.stop_trans_id),
 		['SECCODE'] 				= seccode,
 		['OPERATION'] 				= operation, -- Направление заявки, обязательный параметр. Значения: «S» – продать, «B» – купить
-		['QUANTITY']  				= tostring(math.abs(val.pos_sum)), -- Количество лотов в заявке, обязательный параметр 
+		['QUANTITY']  				= tostring(math.abs(val.pos_sum)), -- Количество лотов в заявке, обязательный параметр
 	};
 
 	local res = sendTransaction(Transaction);
@@ -223,15 +223,15 @@ end
 -- Удаляем Стоп ордер по инстументу
 function kill_stop_order (seccode,val)
 	local Transaction = {
-       ['ACTION'] 					= "KILL_STOP_ORDER", 
+       ['ACTION'] 					= "KILL_STOP_ORDER",
        ['CLASSCODE'] 				= CLASS_CODE,
        ['SECCODE'] 					= seccode,
        ['ACCOUNT'] 					= ACCOUNT_ID,
-       ['CLIENT_CODE'] 				= ACCOUNT_ID, -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках 
+       ['CLIENT_CODE'] 				= ACCOUNT_ID, -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках
        ['TRANS_ID'] 				= removeZero(val.stop_trans_id), -- ID УДАЛЯЮЩЕЙ транзакции
        ['STOP_ORDER_KEY'] 			= tostring(val.stop_order_id)
    	};
- 
+
 	local res = sendTransaction(Transaction);
 	if res ~= "" then message('Error: '..res, 3); end;
 end;
@@ -239,10 +239,10 @@ end;
 -- Удаляем все активные лимитные заявки по иструменту
 function kill_all_futures_orders (seccode)
 	local Transaction = {
-       ['ACTION'] 					= "KILL_ALL_FUTURES_ORDERS", 
+       ['ACTION'] 					= "KILL_ALL_FUTURES_ORDERS",
        ['CLASSCODE'] 				= CLASS_CODE,
        ['ACCOUNT'] 					= ACCOUNT_ID,
-       ['CLIENT_CODE'] 				= ACCOUNT_ID, -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках 
+       ['CLIENT_CODE'] 				= ACCOUNT_ID, -- Комментарий к транзакции, который будет виден в транзакциях, заявках и сделках
        ['TRANS_ID'] 				= "2002",
        ['SECCODE'] 					= seccode,
        ['BASE_CONTRACT'] 			= getSecurityInfo(CLASS_CODE, seccode).base_active_seccode,
@@ -250,4 +250,3 @@ function kill_all_futures_orders (seccode)
 	local res = sendTransaction(Transaction);
 	if res ~= "" then message('Error: '..res, 3); end;
 end;
-
