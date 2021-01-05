@@ -10,7 +10,7 @@
 -- НАСТРАИВАЕМЫЕ ПАРАМЕТРЫ
 CLASS_CODE      = "SPBFUT"; 						-- Код класса (SPBFUT - фючерсы)
 ACCOUNT_ID 			= "SPBFUT001tt"; 				-- Торговыий счет (Демо)
--- ACCOUNT_ID 			= "7655c4l"; 						-- Торговыий счет (Рабочий)
+ACCOUNT_ID 			= "7655c4l"; 						-- Торговыий счет (Рабочий)
 TIME_CLOSE			= "23:29:00";						-- Время закрытия позици и связанные с ним заявками
 STOP_INDENT 		= 200; 									-- Отступ пунктах для Стоп-ордера (по умолчанию)
 STOP_TABLE 			= {											-- Массив БАЗОВЫХ АТИВАХ Стопов (по необходимости добавлять или удалять)
@@ -22,8 +22,6 @@ Is_Run      		= true; 								-- Флаг запуска скрипта посл
 
 -- Функция инициализации функции main()
 function OnInit()
-	-- message("________ OnInit ________");
-	-- Ваш код перед инициализации функции main()
 end;
 
 -- Функция остановки скрипта
@@ -78,13 +76,13 @@ function main_BODY()
 	for class_code in string.gmatch(getClassSecurities(CLASS_CODE), "(%w+)") do
 
 		array_class_code[class_code] = {
-			pos_sum  		= 0, 			-- текущие открытые позиции в лотах
-			pos_price  		= 0, 			-- Эффективная цена позиций
-			stop_sum 		= 0, 			-- текущие активне стоп ордера в лотах
-			stop_trans_id 	= 1001, 		-- Уникальный идентификационный номер заявки, значение от «1» до «2 147 483 647»
-			stop_order_id 	= 0, 			-- Уникальный идентификационный номер заявки, от сервера (в дальнейщейм он презапивыеться)
-			stop_price 		= nil, 			-- Стоп-лимит цена (необходима для запоминаня старой стоп заявки)
-			stop_indent 	= STOP_INDENT, 	-- Стоп в пунктах по умолчаняю
+			pos_sum  				= 0, 						-- текущие открытые позиции в лотах
+			pos_price  			= 0, 						-- Эффективная цена позиций
+			stop_sum 				= 0, 						-- текущие активне стоп ордера в лотах
+			stop_trans_id 	= 1001, 				-- Уникальный идентификационный номер заявки, значение от «1» до «2 147 483 647»
+			stop_order_id 	= 0, 						-- Уникальный идентификационный номер заявки, от сервера (в дальнейщейм он презапивыеться)
+			stop_price 			= nil, 					-- Стоп-лимит цена (необходима для запоминаня старой стоп заявки)
+			stop_indent 		= STOP_INDENT, 	-- Стоп в пунктах по умолчаняю
 		};
 
 		-- проверка на существоваиня стопа в STOP_TABLE, если есть то устанавливаем из STOP_TABLE
@@ -116,9 +114,9 @@ function main_BODY()
 
 		   	-- Записываем данные по открытой Стоп позиции
 			-- Колличество в лотах (если со знаком "-" то это продажа)
- 			array_class_code[stopPos.sec_code]['stop_sum'] 			= tonumber(stopPos.qty); 	-- текущие активне стоп ордера в лотах
+ 			array_class_code[stopPos.sec_code]['stop_sum'] 				= tonumber(stopPos.qty); 	-- текущие активне стоп ордера в лотах
  			array_class_code[stopPos.sec_code]['stop_order_id'] 	= stopPos.order_num; 		-- Уникальный идентификационный номер заявки, от сервера (для последующего удаленя)
- 			array_class_code[stopPos.sec_code]['stop_price'] 		= stopPos.condition_price2; -- Стоп-лимит цена (для заявок типа «Тэйк-профит и стоп-лимит»)
+ 			array_class_code[stopPos.sec_code]['stop_price'] 			= stopPos.condition_price2; -- Стоп-лимит цена (для заявок типа «Тэйк-профит и стоп-лимит»)
 		end;
 	end;
 
@@ -150,15 +148,16 @@ function main_BODY()
 			if(val.pos_sum ~= 0 and getInfoParam("LOCALTIME") >= TIME_CLOSE)  then
 				message("Close on time: "..key, 2);
 				-- Удаляем лиминтые ордера
-				kill_all_futures_orders(key);
+				-- kill_all_futures_orders(key);
 				-- Закрываем позицию по рынку
-				new_order(key, val);
+				-- new_order(key, val);
 			end;
 		end;
+
 	end;
 end;
 
--- Выставляем стоп ордер по инстументу.
+-- Выставляем стоп ордер по инструменту.
 function new_stop_order (seccode, val)
 
 	local operation, condition, offset, stopprice2 = "B", "5", tostring(0), val.pos_price + val.stop_indent;
@@ -198,11 +197,11 @@ end;
 function new_order (seccode, val)
 
 	local operation = "B";
-	local price = tostring(getParamEx(CLASS_CODE, seccode, "bid").param_value + 10*getParamEx(CLASS_CODE, seccode, "SEC_PRICE_STEP").param_value);
+	local price = tostring(getParamEx(CLASS_CODE, seccode, "PRICEMAX").param_value);
 	-- Для позиции лонг
 	if val.pos_sum > 0 then
 		operation = "S";
-		price = tostring(getParamEx(CLASS_CODE, seccode, "bid").param_value - 10*getParamEx(CLASS_CODE, seccode, "SEC_PRICE_STEP").param_value);
+		price = tostring(getParamEx(CLASS_CODE, seccode, "PRICEMAX").param_value);
 	end;
 
 	local Transaction = {
@@ -218,7 +217,7 @@ function new_order (seccode, val)
 		['QUANTITY']  				= tostring(math.abs(val.pos_sum)), -- Количество лотов в заявке, обязательный параметр
 	};
 
-	local res = sendTransaction(Transaction);
+	-- local res = sendTransaction(Transaction);
 	if res ~= "" then message('Error: '..res, 3); end;
 end
 
