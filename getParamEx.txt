@@ -1,0 +1,165 @@
+TABLE getParamEx (STRING class_code, STRING sec_code, STRING param_name)
+
+Функция предназначена для получения значений всех параметров биржевой информации из Таблицы текущих торгов. С помощью этой функции можно получить любое из значений Таблицы текущих торгов для заданных кодов класса и бумаги.
+
+Таблица параметров
+param_type	STRING
+  Тип данных параметра, используемый в Таблице текущих торгов.
+  Возможные значения:
+    «1» – DOUBLE;
+    «2» – LONG;
+    «3» – CHAR;
+    «4» – перечислимый тип;
+    «5» – время;
+    «6» – дата;
+
+param_value	STRING	
+  Значение параметра.
+  Для param_type = 3 значение параметра равно «0», в остальных случаях – числовое представление.
+  Для перечислимых типов значение равно порядковому значению перечисления
+
+param_image	STRING
+  Строковое значение параметра, аналогичное его представлению в таблице.
+  В строковом представлении учитываются разделители разрядов, разделители целой и дробной части.
+  Для перечислимых типов выводятся соответствующие им строковые значения.
+
+result	STRING
+  Результат выполнения операции.
+  Возможные значения:
+    «0» – ошибка;
+    «1» – параметр найден;
+
+Таблица параметров
+param_name = STATUS                     param_type = 4     param_value = 1     param_image = trading     result = true
+param_name = LOTSIZE                    param_type = 2     param_value = 10     param_image = 10     result = true
+param_name = BID                        param_type = 1     param_value = 234.61     param_image = 234.61     result = true
+param_name = BIDDEPTH                   param_type = 2     param_value = 444     param_image = 444     result = true
+param_name = BIDDEPTHT                  param_type = 2     param_value = 245896     param_image = 245,896     result = true
+param_name = NUMBIDS                    param_type = 2     param_value = 1809     param_image = 1,809     result = true
+param_name = OFFER                      param_type = 1     param_value = 234.7     param_image = 234.70     result = true
+param_name = OFFERDEPTH                 param_type = 2     param_value = 275     param_image = 275     result = true
+param_name = OFFERDEPTHT                param_type = 2     param_value = 302478     param_image = 302,478     result = true
+param_name = NUMOFFERS                  param_type = 2     param_value = 2152     param_image = 2,152     result = true
+param_name = OPEN                       param_type = 1     param_value = 234.86     param_image = 234.86     result = true
+param_name = HIGH                       param_type = 1     param_value = 235.49     param_image = 235.49     result = true
+param_name = LOW                        param_type = 1     param_value = 234.22     param_image = 234.22     result = true
+param_name = LAST                       param_type = 1     param_value = 234.61     param_image = 234.61     result = true
+param_name = CHANGE                     param_type = 1     param_value = -0.69     param_image = -0.69     result = true
+param_name = QTY                        param_type = 2     param_value = 27     param_image = 27     result = true
+param_name = TIME                       param_type = 5     param_value = 120115     param_image = 12:01:15 PM     result = true
+param_name = VOLTODAY                   param_type = 1     param_value = 9.67837e+06     param_image = 9,678,370     result = true
+param_name = VALTODAY                   param_type = 1     param_value = 2.27377e+09     param_image = 2,273,768,164     result = true
+param_name = TRADINGSTATUS              param_type = 4     param_value = 1     param_image = open     result = true
+param_name = VALUE                      param_type = 1     param_value = 63344.7     param_image = 63,344.70     result = true
+param_name = WAPRICE                    param_type = 1     param_value = 234.93     param_image = 234.93     result = true
+param_name = HIGHBID                    param_type = 1     param_value = 247.05     param_image = 247.05     result = true
+param_name = LOWOFFER                   param_type = 1     param_value = 215     param_image = 215.00     result = true
+param_name = NUMTRADES                  param_type = 2     param_value = 11809     param_image = 11,809     result = true
+param_name = PREVPRICE                  param_type = 1     param_value = 235.3     param_image = 235.30     result = true
+param_name = PREVWAPRICE                param_type = 1     param_value = 235.46     param_image = 235.46     result = true
+param_name = CLOSEPRICE                 param_type = 1     param_value = 0     param_image = 0.00     result = true
+param_name = LASTCHANGE                 param_type = 2     param_value = -0.29     param_image = -0.29     result = true
+param_name = PRIMARYDIST                param_type = 3     param_value = 0     param_image = No     result = true
+param_name = ACCRUEDINT                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = YIELD                      param_type = 0     param_value = 0     param_image =      result = false
+param_name = COUPONVALUE                param_type = 0     param_value = 0     param_image =      result = false
+param_name = YIELDATPREVWAPRICE         param_type = 0     param_value = 0     param_image =      result = false
+param_name = YIELDATWAPRICE             param_type = 0     param_value = 0     param_image =      result = false
+param_name = PRICEMINUSPREVWAPRICE      param_type = 0     param_value = 0     param_image =      result = false
+param_name = CLOSEYIELD                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = CURRENTVALUE               param_type = 0     param_value = 0     param_image =      result = false
+param_name = LASTVALUE                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = LASTTOPREVSTLPRC           param_type = 0     param_value = 0     param_image =      result = false
+param_name = PREVSETTLEPRICE            param_type = 0     param_value = 0     param_image =      result = false
+param_name = PRICEMVTLIMIT              param_type = 0     param_value = 0     param_image =      result = false
+param_name = PRICEMVTLIMITT1            param_type = 0     param_value = 0     param_image =      result = false
+param_name = MAXOUTVOLUME               param_type = 0     param_value = 0     param_image =      result = false
+param_name = PRICEMAX                   param_type = 0     param_value = 0     param_image =      result = false
+param_name = PRICEMIN                   param_type = 0     param_value = 0     param_image =      result = false
+param_name = NEGVALTODAY                param_type = 0     param_value = 0     param_image =      result = false
+param_name = NEGNUMTRADES               param_type = 0     param_value = 0     param_image =      result = false
+param_name = NUMCONTRACTS               param_type = 0     param_value = 0     param_image =      result = false
+param_name = CLOSETIME                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = OPENVAL                    param_type = 0     param_value = 0     param_image =      result = false
+param_name = CHNGOPEN                   param_type = 0     param_value = 0     param_image =      result = false
+param_name = CHNGCLOSE                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = BUYDEPO                    param_type = 0     param_value = 0     param_image =      result = false
+param_name = SELLDEPO                   param_type = 0     param_value = 0     param_image =      result = false
+param_name = CHANGETIME                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = SELLPROFIT                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = BUYPROFIT                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = TRADECHANGE                param_type = 0     param_value = 0     param_image =      result = false
+param_name = FACEVALUE                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = MARKETPRICE                param_type = 1     param_value = 235.46     param_image = 235.46     result = true
+param_name = MARKETPRICETODAY           param_type = 1     param_value = 0     param_image = 0.00     result = true
+param_name = NEXTCOUPON                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = BUYBACKPRICE               param_type = 0     param_value = 0     param_image =      result = false
+param_name = BUYBACKDATE                param_type = 0     param_value = 0     param_image =      result = false
+param_name = ISSUESIZE                  param_type = 1     param_value = 2.15869e+10     param_image = 21,586,948,000     result = true
+param_name = PREVDATE                   param_type = 6     param_value = 2.01909e+07     param_image = 9/18/2019     result = true
+param_name = DURATION                   param_type = 0     param_value = 0     param_image =      result = false
+param_name = LOPENPRICE                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = LCURRENTPRICE              param_type = 1     param_value = 234.74     param_image = 234.74     result = true
+param_name = LCLOSEPRICE                param_type = 1     param_value = 0     param_image = 0.00     result = true
+param_name = QUOTEBASIS                 param_type = 4     param_value = 0     param_image = Price     result = true
+param_name = PREVADMITTEDQUOT           param_type = 1     param_value = 235.3     param_image = 235.30     result = true
+param_name = LASTBID                    param_type = 1     param_value = 234.61     param_image = 234.61     result = true
+param_name = LASTOFFER                  param_type = 1     param_value = 234.7     param_image = 234.70     result = true
+param_name = PREVLEGALCLOSEPR           param_type = 1     param_value = 235.3     param_image = 235.30     result = true
+param_name = COUPONPERIOD               param_type = 0     param_value = 0     param_image =      result = false
+param_name = MARKETPRICE2               param_type = 1     param_value = 0     param_image = 0.00     result = true
+param_name = ADMITTEDQUOTE              param_type = 1     param_value = 0     param_image = 0.00     result = true
+param_name = BGOP                       param_type = 0     param_value = 0     param_image =      result = false
+param_name = BGONP                      param_type = 0     param_value = 0     param_image =      result = false
+param_name = STRIKE                     param_type = 0     param_value = 0     param_image =      result = false
+param_name = STEPPRICET                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = STEPPRICE                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = SETTLEPRICE                param_type = 0     param_value = 0     param_image =      result = false
+param_name = OPTIONTYPE                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = OPTIONBASE                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = VOLATILITY                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = THEORPRICE                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = PERCENTRATE                param_type = 0     param_value = 0     param_image =      result = false
+param_name = ISPERCENT                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = CLSTATE                    param_type = 0     param_value = 0     param_image =      result = false
+param_name = CLPRICE                    param_type = 0     param_value = 0     param_image =      result = false
+param_name = STARTTIME                  param_type = 5     param_value = 95000     param_image = 9:50:00 AM     result = true
+param_name = ENDTIME                    param_type = 5     param_value = 95948     param_image = 9:59:48 AM     result = true
+param_name = EVNSTARTTIME               param_type = 0     param_value = 0     param_image =      result = false
+param_name = EVNENDTIME                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = MONSTARTTIME               param_type = 0     param_value = 0     param_image =      result = false
+param_name = MONENDTIME                 param_type = 0     param_value = 0     param_image =      result = false
+param_name = CURSTEPPRICE               param_type = 0     param_value = 0     param_image =      result = false
+param_name = REALVMPRICE                param_type = 0     param_value = 0     param_image =      result = false
+param_name = MARG                       param_type = 0     param_value = 0     param_image =      result = false
+param_name = EXPDATE                    param_type = 0     param_value = 0     param_image =      result = false
+param_name = CROSSRATE                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = BASEPRICE                  param_type = 0     param_value = 0     param_image =      result = false
+param_name = HIGHVAL                    param_type = 0     param_value = 0     param_image =      result = false
+param_name = LOWVAL                     param_type = 0     param_value = 0     param_image =      result = false
+param_name = ICHANGE                    param_type = 0     param_value = 0     param_image =      result = false
+param_name = IOPEN                      param_type = 0     param_value = 0     param_image =      result = false
+param_name = PCHANGE                    param_type = 0     param_value = 0     param_image =      result = false
+param_name = OPENPERIODPRICE            param_type = 1     param_value = 234.86     param_image = 234.86     result = true
+param_name = MIN_CURR_LAST              param_type = 1     param_value = 234.59     param_image = 234.59     result = true
+param_name = SETTLECODE                 param_type = 4     param_value = 8     param_image = Y2     result = true
+param_name = STEPPRICECL                param_type = 0     param_value = 0     param_image =      result = false
+param_name = STEPPRICEPRCL              param_type = 0     param_value = 0     param_image =      result = false
+param_name = MIN_CURR_LAST_TI           param_type = 5     param_value = 120100     param_image = 12:01:00 PM     result = true
+param_name = PREVLOTSIZE                param_type = 2     param_value = 0     param_image = 0     result = true
+param_name = LOTSIZECHANGEDAT           param_type = 6     param_value = 0     param_image =      result = true
+param_name = AUCTPRICE                  param_type = 1     param_value = 234.86     param_image = 234.86     result = true
+param_name = CLOSING_AUCTION_VOLUME     param_type = 0     param_value = 0     param_image =      result = false
+param_name = LONGNAME                   param_type = 3     param_value = 0     param_image = Sberbank     result = true
+param_name = SHORTNAME                  param_type = 3     param_value = 0     param_image = Sberbank     result = true
+param_name = CODE                       param_type = 3     param_value = 0     param_image = SBER     result = true
+param_name = CLASSNAME                  param_type = 3     param_value = 0     param_image = MOEX E&B: T+: Shares     result = true
+param_name = CLASS_CODE                 param_type = 3     param_value = 0     param_image = TQBR     result = true
+param_name = TRADE_DATE_CODE            param_type = 6     param_value = 2.01909e+07     param_image = 9/19/2019     result = true
+param_name = MAT_DATE                   param_type = 0     param_value = 0     param_image =      result = false
+param_name = DAYS_TO_MAT_DATE           param_type = 0     param_value = 0     param_image =      result = false
+param_name = SEC_FACE_VALUE             param_type = 1     param_value = 3     param_image = 3.00     result = true
+param_name = SEC_FACE_UNIT              param_type = 3     param_value = 0     param_image = SUR     result = true
+param_name = SEC_SCALE                  param_type = 2     param_value = 2     param_image = 2     result = true
+param_name = SEC_PRICE_STEP             param_type = 1     param_value = 0.01     param_image = 0.01     result = true
+param_name = SECTYPE                    param_type = 4     param_value = 0     param_image = ord sh     result = true
