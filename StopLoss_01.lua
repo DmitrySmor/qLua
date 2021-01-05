@@ -148,9 +148,9 @@ function main_BODY()
 			if(val.pos_sum ~= 0 and getInfoParam("LOCALTIME") >= TIME_CLOSE)  then
 				message("Close on time: "..key, 2);
 				-- Удаляем лиминтые ордера
-				-- kill_all_futures_orders(key);
+				kill_all_futures_orders(key);
 				-- Закрываем позицию по рынку
-				-- new_order(key, val);
+				new_order(key, val);
 			end;
 		end;
 
