@@ -11,15 +11,13 @@
 CLASS_CODE      	= "SPBFUT"; 						-- Код класса (SPBFUT - фючерсы)
 ACCOUNT_ID 				= "SPBFUT001tt"; 				-- Торговыий счет (Демо)
 ACCOUNT_ID 				= "7655c4l"; 						-- Торговыий счет (Рабочий)
-TIME_CLOSE				= "23:29:00";						-- Время закрытия позици и связанные с ним заявками
+TIME_CLOSE				= "23:30:00";						-- Время закрытия позици и связанные с ним заявками
 STOP_INDENT 			= 200; 									-- Отступ пунктах для Стоп-ордера (по умолчанию)
 STOP_TABLE 				= {											-- Массив БАЗОВЫХ АТИВАХ Стопов (по необходимости добавлять или удалять)
-										BR  = 20,							-- Отступ пунктах для Стоп-ордера BR
-										RTS = 200,						-- Отступ пунктах для Стоп-ордера RTS
-										Si  = 50,							-- Отступ пунктах для Стоп-ордера Si
-					  			};
-
-SEC_LIST					= getClassSecurities(CLASS_CODE); -- Список со всеми кодами
+	BR  = 20,																-- Отступ пунктах для Стоп-ордера BR
+	RTS = 200,															-- Отступ пунктах для Стоп-ордера RTS
+	Si  = 50,																-- Отступ пунктах для Стоп-ордера Si
+};
 Is_Run      			= true; 								-- Флаг запуска скрипта после нажатия на копку запуска
 
 -- Функция инициализации функции main()
@@ -60,39 +58,45 @@ end;
 -- Функция основной логики скрипта, работает в отдельном потоке
 function main()
 	-- main_BODY();
+	-- Локальный массив со всеми кода фючерсов, код будет как индекс
+	local array_class_code = {}; -- перезаписываемы массив, с которым мы работаем
+	-- Заполняем массив с посоянными данными
+	for sec_code in string.gmatch(getClassSecurities(CLASS_CODE), "(%w+)") do
+		array_class_code[sec_code] = {
+			stop_trans_id 	= 1001, 				-- Уникальный идентификационный номер заявки, значение от «1» до «2 147 483 647»
+			stop_indent 		= STOP_INDENT, 	-- Стоп в пунктах по умолчаняю
+		};
+
+		-- Узнаем какой базовый актив у инструмента
+		local base_active =  getSecurityInfo(CLASS_CODE, sec_code).base_active_seccode;
+		-- проверка на существоваиня стопа в STOP_TABLE, если есть то устанавливаем из STOP_TABLE
+		if (STOP_TABLE[base_active]) then
+			array_class_code[sec_code].stop_indent = STOP_TABLE[base_active];
+		end;
+
+	end;
+
 	while Is_Run do
 		sleep(1000); -- одна сикунда = 1000
 		-- Запускаем скрипт если есть соединение с сервером
 		if isConnected() then
 			-- тело скрипта
-            main_BODY();
+            main_BODY(array_class_code);
             else
             	message("CONNECTION STATE IS : " .. tostring(isConnected()), 3);
      	end;
 	end;
 end;
 
-function main_BODY()
-	-- Локальный массив со всеми кода фючерсов, код будет как индекс
-	local array_class_code = {}; -- перезаписываемы массив, с которым мы работаем
+function main_BODY(array_class_code)
 
-	for class_code in string.gmatch(SEC_LIST, "(%w+)") do
-		array_class_code[class_code] = {
-			pos_sum  				= 0, 						-- текущие открытые позиции в лотах
-			pos_price  			= 0, 						-- Эффективная цена позиций
-			stop_sum 				= 0, 						-- текущие активне стоп ордера в лотах
-			stop_trans_id 	= 1001, 				-- Уникальный идентификационный номер заявки, значение от «1» до «2 147 483 647»
-			stop_order_id 	= 0, 						-- Уникальный идентификационный номер заявки, от сервера (в дальнейщейм он презапивыеться)
-			stop_price 			= nil, 					-- Стоп-лимит цена (необходима для запоминаня старой стоп заявки)
-			stop_indent 		= STOP_INDENT, 	-- Стоп в пунктах по умолчаняю
-		};
-
-		-- Узнаем какой базовый актив у инструмента
-		local base_active =  getSecurityInfo(CLASS_CODE, class_code).base_active_seccode;
-		-- проверка на существоваиня стопа в STOP_TABLE, если есть то устанавливаем из STOP_TABLE
-		if (STOP_TABLE[base_active]) then
-			array_class_code[class_code]["stop_indent"] = STOP_TABLE[base_active];
-		end;
+	-- Добовляем в массив перезаписываемые значение
+	for key, val in pairs(array_class_code) do
+		array_class_code[key]["pos_sum"] 				= 0 			-- текущие открытые позиции в лотах
+		array_class_code[key]["pos_price"] 			= 0 			-- Эффективная цена позиции
+		array_class_code[key]["stop_sum"] 			= 0 			-- текущие активне стоп ордера в лотах
+		array_class_code[key]["stop_order_id"] 	= 0 			-- Уникальный идентификационный номер заявки, от сервера (в дальнейщейм он презапивыеться)
+		array_class_code[key]["stop_price"] 		= nil 		-- Стоп-лимит цена откртой позици (необходима для запоминаня старой стоп заявки)
 	end;
 
 	-- Собираем данные по открытым позициям  из таблицы "futures_client_holding"
@@ -113,7 +117,6 @@ function main_BODY()
 		for i, id in pairs(array) do
 	   	-- получаем из таблицы строку с данными по индексу id
 	   	local stopPos = getItem("stop_orders", id);
-
 			-- Записываем данные по открытой Стоп позиции
 			-- Колличество в лотах (если со знаком "-" то это продажа)
 			array_class_code[stopPos.sec_code]['stop_sum'] 				= tonumber(stopPos.qty); 	-- текущие активне стоп ордера в лотах
@@ -161,7 +164,7 @@ end;
 
 -- Выставляем стоп ордер по инструменту.
 function new_stop_order (seccode, val)
-
+	-- Для позиции шорт - ПО УМОЛЧАНИЮ
 	local operation, condition, offset, stopprice2 = "B", "5", tostring(0), val.pos_price + val.stop_indent;
 	-- Для позиции лонг
 	if val.pos_sum > 0 then
@@ -219,7 +222,7 @@ function new_order (seccode, val)
 		['QUANTITY']  				= tostring(math.abs(val.pos_sum)), -- Количество лотов в заявке, обязательный параметр
 	};
 
-	-- local res = sendTransaction(Transaction);
+	local res = sendTransaction(Transaction);
 	if res ~= "" then message('Error: '..res, 3); end;
 end
 
