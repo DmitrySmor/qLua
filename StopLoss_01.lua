@@ -19,7 +19,7 @@ STOP_TABLE 				= {											-- Массив БАЗОВЫХ АТИВАХ Сто�
 										Si  = 50,							-- Отступ пунктах для Стоп-ордера Si
 					  			};
 
-LIST_CODE_ARRAY		= string.gmatch(getClassSecurities(CLASS_CODE), "(%w+)"); -- Массив со всеми кодами
+SEC_LIST					= getClassSecurities(CLASS_CODE); -- Список со всеми кодами
 Is_Run      			= true; 								-- Флаг запуска скрипта после нажатия на копку запуска
 
 -- Функция инициализации функции main()
@@ -76,7 +76,7 @@ function main_BODY()
 	-- Локальный массив со всеми кода фючерсов, код будет как индекс
 	local array_class_code = {}; -- перезаписываемы массив, с которым мы работаем
 
-	for class_code in LIST_CODE_ARRAY do
+	for class_code in string.gmatch(SEC_LIST, "(%w+)") do
 		array_class_code[class_code] = {
 			pos_sum  				= 0, 						-- текущие открытые позиции в лотах
 			pos_price  			= 0, 						-- Эффективная цена позиций
@@ -95,21 +95,15 @@ function main_BODY()
 		end;
 	end;
 
-	-- for key, val in pairs(array_class_code) do
-	-- 	message(""..key.." - "..val.stop_indent)
-	-- end
-
 	-- Собираем данные по открытым позициям  из таблицы "futures_client_holding"
 	if getNumberOf("futures_client_holding") then
 		for i = 0, getNumberOf("futures_client_holding")-1 do
 			-- получаем из таблицы строку с данными по индексу i
 			local position = getItem("futures_client_holding", i);
 
-			if (array_class_code[position.seccode]) then
-				-- Записываем данные по открытой позиции
-	 			array_class_code[position.seccode]['pos_sum'] 	= tonumber(position.totalnet);  -- Колличество в лотах (если со знаком "-" то это продажа)
-	 			array_class_code[position.seccode]['pos_price'] = position.avrposnprice; 		-- Эффективная цена позиций
-			end;
+			-- Записываем данные по открытой позиции
+			array_class_code[position.seccode]['pos_sum'] 	= tonumber(position.totalnet);  -- Колличество в лотах (если со знаком "-" то это продажа)
+			array_class_code[position.seccode]['pos_price'] = position.avrposnprice; 		-- Эффективная цена позиций
    	end;
 	end;
 
@@ -120,13 +114,11 @@ function main_BODY()
 	   	-- получаем из таблицы строку с данными по индексу id
 	   	local stopPos = getItem("stop_orders", id);
 
-			if (array_class_code[stopPos.sec_code]) then
-		   	-- Записываем данные по открытой Стоп позиции
-				-- Колличество в лотах (если со знаком "-" то это продажа)
-	 			array_class_code[stopPos.sec_code]['stop_sum'] 				= tonumber(stopPos.qty); 	-- текущие активне стоп ордера в лотах
-	 			array_class_code[stopPos.sec_code]['stop_order_id'] 	= stopPos.order_num; 		-- Уникальный идентификационный номер заявки, от сервера (для последующего удаленя)
-	 			array_class_code[stopPos.sec_code]['stop_price'] 			= stopPos.condition_price2; -- Стоп-лимит цена (для заявок типа «Тэйк-профит и стоп-лимит»)
-			end;
+			-- Записываем данные по открытой Стоп позиции
+			-- Колличество в лотах (если со знаком "-" то это продажа)
+			array_class_code[stopPos.sec_code]['stop_sum'] 				= tonumber(stopPos.qty); 	-- текущие активне стоп ордера в лотах
+			array_class_code[stopPos.sec_code]['stop_order_id'] 	= stopPos.order_num; 		-- Уникальный идентификационный номер заявки, от сервера (для последующего удаленя)
+			array_class_code[stopPos.sec_code]['stop_price'] 			= stopPos.condition_price2; -- Стоп-лимит цена (для заявок типа «Тэйк-профит и стоп-лимит»)
 		end;
 	end;
 
