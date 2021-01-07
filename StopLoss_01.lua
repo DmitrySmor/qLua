@@ -80,11 +80,10 @@ function main()
 		sleep(1000); -- одна сикунда = 1000
 		-- Запускаем скрипт если есть соединение с сервером
 		if isConnected() then
-			-- тело скрипта
-            main_BODY(array_class_code);
-            else
-            	message("CONNECTION STATE IS : " .. tostring(isConnected()), 3);
-     	end;
+      -- main_BODY(array_class_code); -- тело скрипта
+        else
+        	message("CONNECTION STATE IS : " .. tostring(isConnected()), 3);
+   	end;
 	end;
 end;
 
@@ -127,23 +126,21 @@ function main_BODY(array_class_code)
 
 	-- Проверяем сосотяние позицй
 	for key, val in pairs(array_class_code) do
-		-- Позиция(есть) и Стоп(есть) и они не равны тогда удаляем стоп
+		-- Позиция(есть) и Стоп(есть) и они не равны тогда удаляем стоп (при следующем проходе цикла он поставиться с нужным колличестовом)
 		if (val.pos_sum ~= 0  and val.stop_sum ~= 0 and math.abs(val.pos_sum) ~= math.abs(val.stop_sum)) then
-			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum);
+			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum.." Removing these stop orders", 2);
 			-- Удаляем стоп заявку
 			kill_stop_order(key, val);
-			-- Ставим новую стоп заявку
-   			new_stop_order (key, val);
 
-		-- Позиция(есть) и Стоп(нет) добовляем стоп
+		-- Позиция(есть) и Стоп(нет) добовляем стоп в нужном колличеве
 		elseif (val.pos_sum ~= 0  and val.stop_sum == 0) then
-			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum);
+			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum.." Add a stop order", 2);
 			-- Ставим новую стоп заявку
 			new_stop_order (key, val);
 
-		-- Позиция(нет) и Стоп(есть) удаляем стоп
+		-- Позиция(нет) и Стоп(есть) удаляем все стоп ордера
 		elseif (val.pos_sum == 0  and val.stop_sum ~= 0) then
-			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum);
+			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum.." Removing all stop orders", 2);
 			-- Удаляем стоп заявку
 			kill_stop_order(key, val);
 		end;
@@ -154,12 +151,12 @@ function main_BODY(array_class_code)
 				message("Close on time: "..key, 2);
 				-- Удаляем лиминтые ордера
 				kill_all_futures_orders(key);
-				-- Закрываем позицию по рынку
+				-- Закрываем позицию по рынку, стоп ордера снимуться при следуюем проходе цикла
 				new_order(key, val);
 			end;
 		end;
-
 	end;
+
 end;
 
 -- Выставляем стоп ордер по инструменту.
