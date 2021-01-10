@@ -131,7 +131,7 @@ function main_BODY(array_class_code)
 
 	-- Проверяем сосотяние позицй
 	for key, val in pairs(array_class_code) do
-		-- Позиция(есть) и Стоп(есть) и они не равны тогда удаляем стоп (при следующем проходе цикла он поставиться с нужным колличестовом)
+		-- Позиция(есть) и Стоп(есть) и они не равны тогда удаляем стоп и ставим новый
 		if (val.pos_sum ~= 0  and val.stop_sum ~= 0 and math.abs(val.pos_sum) ~= math.abs(val.stop_sum)) then
 			message(key..": pos_sum - "..val.pos_sum..", stop_sum - "..val.stop_sum.." Replacing stop orders", 2);
 			-- Удаляем стоп заявку
