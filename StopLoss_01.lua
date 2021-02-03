@@ -41,7 +41,7 @@ function OnStopOrder(trans_reply)
 	if (trans_reply.balance == 0) then
 		message("Delete All limit orders: "..trans_reply.sec_code  , 2);
 		kill_all_futures_orders(trans_reply.sec_code);
-	end;
+	end
 end;
 
 -- Функция удаление точки и нулей после нее (Вспомогательная функция)
